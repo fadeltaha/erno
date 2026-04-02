@@ -41,6 +41,8 @@ f2l_pair_WBR = False
 f2l_pair_WGO = False
 cube_scrambled = False
 run_cfop_check = False
+current_move = ""
+scramble_move = 0
 
 #comms = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
 #comms.reset_input_buffer()
@@ -59,9 +61,15 @@ def scramble_cube():
 def detect_scrambling():
 	global cube_scrambled
 	global start_time
+	global scramble_move
+	current_move = buffer_scramble[scramble_move]
 	print("Scrambled cube state:")
 	print(scrambled_cube)
 	print(scramble)
+	if new_move == current_move:
+		scramble_move += 1
+	else:
+		print("Wrong move detected!")
 	scrambled_cube_kociemba_state = scrambled_cube.get_kociemba_facelet_colors()
 	visual_kociemba_state = visual.get_kociemba_facelet_colors()
 	if visual_kociemba_state == scrambled_cube_kociemba_state:
@@ -71,8 +79,7 @@ def detect_scrambling():
 	else:
 		cube_scrambled = False
 #		comms.write(b"Scrambling...\n")
-	if new_move == buffer_scramble[scramble_move]:
-		scramble_move += 1
+
 
 def serial_communication_protocol():
 	if cross_solved:
@@ -272,6 +279,7 @@ async def main():
 				else:
 					new_move = curr_window[-1] if curr_window else None
 				if new_move:
+					print("\033c", end="")
 					global moves_recieved
 					moves_recieved += 1
 					if moves_recieved > 2:
