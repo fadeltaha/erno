@@ -42,7 +42,8 @@ f2l_pair_WGO = False
 cube_scrambled = False
 run_cfop_check = False
 current_move = ""
-scramble_move = 0
+buffer_x = 0
+finish_session = False
 
 #comms = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
 #comms.reset_input_buffer()
@@ -50,26 +51,30 @@ scramble_move = 0
 def scramble_cube():
 	global scramble
 	global buffer_scramble
+	global display_scramble
 	buffer_scramble = visual.generate_random_moves(num_steps=30)
-	for x in range(len(buffer_scramble)-2, -1, -1):
-		if buffer_scramble[x+1] == buffer_scramble[x]:
-			buffer_scramble.pop(x+1)
-			buffer_scramble[x] = str(buffer_scramble[x]) + "2"
+	buffer_scramble = [str(m) for m in buffer_scramble]
+	display_scramble = buffer_scramble
+	for x in range(len(display_scramble)-2, -1, -1):
+		if display_scramble[x+1] == display_scramble[x]:
+			display_scramble.pop(x+1)
+			display_scramble[x] = str(display_scramble[x]) + "2"
 	scramble = " ".join(str(x) for x in buffer_scramble)
 	scrambled_cube.rotate(scramble)
+	scramble = " ".join(str(x) for x in display_scramble)
 
-def detect_scrambling():
+def detect_scrambling(move):
 	global cube_scrambled
 	global start_time
-	global scramble_move
-	current_move = buffer_scramble[scramble_move]
+	global buffer_x
+	global buffer_scramble
+	global current_move
+	if buffer_x == 0 and current_move == "":
+		current_move = buffer_scramble[0]
+	current_move = buffer_scramble[buffer_x]
 	print("Scrambled cube state:")
 	print(scrambled_cube)
 	print(scramble)
-	if new_move == current_move:
-		scramble_move += 1
-	else:
-		print("Wrong move detected!")
 	scrambled_cube_kociemba_state = scrambled_cube.get_kociemba_facelet_colors()
 	visual_kociemba_state = visual.get_kociemba_facelet_colors()
 	if visual_kociemba_state == scrambled_cube_kociemba_state:
@@ -78,8 +83,21 @@ def detect_scrambling():
 		start_time = time.perf_counter()
 	else:
 		cube_scrambled = False
+		detect_incorrect_scrambling(move)
 #		comms.write(b"Scrambling...\n")
+	print(move)
 
+def detect_incorrect_scrambling(move):
+	global buffer_scramble
+	global current_move
+	global buffer_x
+	if current_move == move:
+		buffer_x += 1
+		current_move = buffer_scramble[buffer_x]
+	else:
+		print(f"Wrong move! {current_move}")
+	print(current_move)
+	print(str(buffer_x))
 
 def serial_communication_protocol():
 	if cross_solved:
@@ -186,6 +204,7 @@ def CFOP():
 					print(f"OLL: ", " ".join(str(x) for x in OLL_moves))
 					print(f"PLL: ", " ".join(str(x) for x in PLL_moves))
 					analyse_cube_solve()
+					finish_session = True
 
 def analyse_cube_solve():
 	analysis = []
@@ -279,7 +298,6 @@ async def main():
 				else:
 					new_move = curr_window[-1] if curr_window else None
 				if new_move:
-					print("\033c", end="")
 					global moves_recieved
 					moves_recieved += 1
 					if moves_recieved > 2:
@@ -292,7 +310,7 @@ async def main():
 						if cube_scrambled:
 							run_cfop_check = True
 						else:
-							detect_scrambling()
+							detect_scrambling(new_move)
 					else:
 						print("Initializing cube..")
 						print("Please do another turn")
@@ -311,4 +329,6 @@ async def run_task():
 			CFOP()
 #			serial_communication_protocol()
 		await asyncio.sleep(0.25)  # run 4 times per second
+		if finish_session:
+			break
 asyncio.run(main())

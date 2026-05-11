@@ -41,7 +41,8 @@ f2l_pair_WBR = False
 f2l_pair_WGO = False
 cube_scrambled = False
 run_cfop_check = False
-i = 0
+current_move = ""
+buffer_x = 0
 
 #comms = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
 #comms.reset_input_buffer()
@@ -50,6 +51,7 @@ def scramble_cube():
 	global scramble
 	global buffer_scramble
 	buffer_scramble = visual.generate_random_moves(num_steps=30)
+	buffer_scramble = [str(m) for m in buffer_scramble]
 	for x in range(len(buffer_scramble)-2, -1, -1):
 		if buffer_scramble[x+1] == buffer_scramble[x]:
 			buffer_scramble.pop(x+1)
@@ -57,13 +59,17 @@ def scramble_cube():
 	scramble = " ".join(str(x) for x in buffer_scramble)
 	scrambled_cube.rotate(scramble)
 
-def detect_scrambling():
+def detect_scrambling(move):
 	global cube_scrambled
 	global start_time
+	global buffer_x
+	global buffer_scramble
+	global current_move
+	if buffer_x == 0 and current_move == "":
+		current_move = buffer_scramble[0]
 	print("Scrambled cube state:")
 	print(scrambled_cube)
 	print(scramble)
-	print(buffer_scramble)
 	scrambled_cube_kociemba_state = scrambled_cube.get_kociemba_facelet_colors()
 	visual_kociemba_state = visual.get_kociemba_facelet_colors()
 	if visual_kociemba_state == scrambled_cube_kociemba_state:
@@ -72,16 +78,18 @@ def detect_scrambling():
 		start_time = time.perf_counter()
 	else:
 		cube_scrambled = False
+		detect_incorrect_scrambling(move)
 #		comms.write(b"Scrambling...\n")
 
-def detect_wrong_moves(move):
-	global i
-	if move == scramble[i]:
-		i += 1
+def detect_incorrect_scrambling(move):
+	global buffer_scramble
+	global current_move
+	global buffer_x
+	if current_move == move:
+		buffer_x += 1
+		current_move = buffer_scramble[buffer_x]
 	else:
-		print("You have done a wrong move!")
-		print(f"Move index: {i}")
-
+		print(f"Wrong move! {current_move}")
 
 def serial_communication_protocol():
 	if cross_solved:
@@ -293,8 +301,7 @@ async def main():
 						if cube_scrambled:
 							run_cfop_check = True
 						else:
-							detect_scrambling()
-							detect_wrong_moves(new_move)
+							detect_scrambling(new_move)
 					else:
 						print("Initializing cube..")
 						print("Please do another turn")
