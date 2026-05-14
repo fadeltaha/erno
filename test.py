@@ -50,12 +50,20 @@ buffer_x = 0
 def scramble_cube():
 	global scramble
 	global buffer_scramble
+	global logic_scramble
 	buffer_scramble = visual.generate_random_moves(num_steps=30)
 	buffer_scramble = [str(m) for m in buffer_scramble]
 	for x in range(len(buffer_scramble)-2, -1, -1):
 		if buffer_scramble[x+1] == buffer_scramble[x]:
 			buffer_scramble.pop(x+1)
 			buffer_scramble[x] = str(buffer_scramble[x]) + "2"
+	logic_scramble = buffer_scramble.copy()
+	for x in range(len(logic_scramble)-2, -1, -1):
+		if "2" in logic_scramble[x]:
+			buffer_string = logic_scramble[x].replace("2", "")
+			logic_scramble.pop(x)
+			logic_scramble.insert(x, buffer_string)
+			logic_scramble.insert(x+1, buffer_string)
 	scramble = " ".join(str(x) for x in buffer_scramble)
 	scrambled_cube.rotate(scramble)
 
@@ -63,10 +71,10 @@ def detect_scrambling(move):
 	global cube_scrambled
 	global start_time
 	global buffer_x
-	global buffer_scramble
+	global logic_scramble
 	global current_move
 	if buffer_x == 0 and current_move == "":
-		current_move = buffer_scramble[0]
+		current_move = logic_scramble[0]
 	print("Scrambled cube state:")
 	print(scrambled_cube)
 	print(scramble)
@@ -82,12 +90,12 @@ def detect_scrambling(move):
 #		comms.write(b"Scrambling...\n")
 
 def detect_incorrect_scrambling(move):
-	global buffer_scramble
+	global logic_scramble
 	global current_move
 	global buffer_x
 	if current_move == move:
 		buffer_x += 1
-		current_move = buffer_scramble[buffer_x]
+		current_move = logic_scramble[buffer_x]
 	else:
 		print(f"Wrong move! {current_move}")
 
