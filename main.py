@@ -54,11 +54,17 @@ def scramble_cube():
 	global display_scramble
 	buffer_scramble = visual.generate_random_moves(num_steps=30)
 	buffer_scramble = [str(m) for m in buffer_scramble]
-	display_scramble = buffer_scramble
+	display_scramble = buffer_scramble.copy()
 	for x in range(len(display_scramble)-2, -1, -1):
-		if display_scramble[x+1] == display_scramble[x]:
+		if display_scramble[x] == display_scramble[x+1]:
 			display_scramble.pop(x+1)
+			if "'" in display_scramble[x]:
+				display_scramble[x] = display_scramble[x].replace("'", "")
 			display_scramble[x] = str(display_scramble[x]) + "2"
+	for x in range(len(buffer_scramble)-2, -1, -1):	
+		if "2" in buffer_scramble[x]:
+			buffer_scramble[x] = buffer_scramble[x].replace("2", "")
+			buffer_scramble.insert(x+1, buffer_scramble[x])
 	scramble = " ".join(str(x) for x in buffer_scramble)
 	scrambled_cube.rotate(scramble)
 	scramble = " ".join(str(x) for x in display_scramble)
@@ -85,7 +91,6 @@ def detect_scrambling(move):
 		cube_scrambled = False
 		detect_incorrect_scrambling(move)
 #		comms.write(b"Scrambling...\n")
-	print(move)
 
 def detect_incorrect_scrambling(move):
 	global buffer_scramble
@@ -96,8 +101,6 @@ def detect_incorrect_scrambling(move):
 		current_move = buffer_scramble[buffer_x]
 	else:
 		print(f"Wrong move! {current_move}")
-	print(current_move)
-	print(str(buffer_x))
 
 def serial_communication_protocol():
 	if cross_solved:
@@ -199,10 +202,10 @@ def CFOP():
 					global end_time
 					end_time = time.perf_counter()
 					print("Time:", str(end_time - start_time))
-					print(f"Cross: ", " ".join(str(x) for x in cross_moves))
-					print(f"F2L: ", " ".join(str(x) for x in f2l_moves))
-					print(f"OLL: ", " ".join(str(x) for x in OLL_moves))
-					print(f"PLL: ", " ".join(str(x) for x in PLL_moves))
+					print(f"Cross: ", " ".join(str(x) for x in combine_moves(cross_moves)))
+					print(f"F2L: ", " ".join(str(x) for x in combine_moves(f2l_moves)))
+					print(f"OLL: ", " ".join(str(x) for x in combine_moves(OLL_moves)))
+					print(f"PLL: ", " ".join(str(x) for x in combine_moves(PLL_moves)))
 					analyse_cube_solve()
 					finish_session = True
 
