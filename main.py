@@ -202,12 +202,11 @@ def CFOP():
 					global end_time
 					end_time = time.perf_counter()
 					print("Time:", str(end_time - start_time))
-					print(f"Cross: ", " ".join(str(x) for x in combine_moves(cross_moves)))
-					print(f"F2L: ", " ".join(str(x) for x in combine_moves(f2l_moves)))
-					print(f"OLL: ", " ".join(str(x) for x in combine_moves(OLL_moves)))
-					print(f"PLL: ", " ".join(str(x) for x in combine_moves(PLL_moves)))
+					print(f"Cross: ", " ".join(str(x) for x in cross_moves))
+					print(f"F2L: ", " ".join(str(x) for x in f2l_moves))
+					print(f"OLL: ", " ".join(str(x) for x in OLL_moves))
+					print(f"PLL: ", " ".join(str(x) for x in PLL_moves))
 					analyse_cube_solve()
-					finish_session = True
 
 def analyse_cube_solve():
 	analysis = []
