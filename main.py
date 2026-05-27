@@ -61,11 +61,12 @@ def scramble_cube():
 			if "'" in display_scramble[x]:
 				display_scramble[x] = display_scramble[x].replace("'", "")
 			display_scramble[x] = str(display_scramble[x]) + "2"
+	buffer_scramble = display_scramble.copy()
 	for x in range(len(buffer_scramble)-2, -1, -1):	
 		if "2" in buffer_scramble[x]:
-			buffer_scramble[x] = buffer_scramble[x].replace("2", "")
+			buffer_scramble[x] = buffer_scramble[x].replace("2", "''")
 			buffer_scramble.insert(x+1, buffer_scramble[x])
-	scramble = " ".join(str(x) for x in buffer_scramble)
+	scramble = " ".join(str(x) for x in display_scramble)
 	scrambled_cube.rotate(scramble)
 	scramble = " ".join(str(x) for x in display_scramble)
 
@@ -81,6 +82,7 @@ def detect_scrambling(move):
 	print("Scrambled cube state:")
 	print(scrambled_cube)
 	print(scramble)
+	print(buffer_scramble)
 	scrambled_cube_kociemba_state = scrambled_cube.get_kociemba_facelet_colors()
 	visual_kociemba_state = visual.get_kociemba_facelet_colors()
 	if visual_kociemba_state == scrambled_cube_kociemba_state:
@@ -96,9 +98,19 @@ def detect_incorrect_scrambling(move):
 	global buffer_scramble
 	global current_move
 	global buffer_x
+	print(move)
 	if current_move == move:
 		buffer_x += 1
 		current_move = buffer_scramble[buffer_x]
+	elif "''" in current_move:
+		if "'" in move:
+			if move.replace("'", "") == current_move.replace("''", ""):
+				buffer_x += 1
+				current_move = buffer_scramble[buffer_x]
+		else:
+			if move == current_move.replace("''", ""):
+				buffer_x += 1
+				current_move = buffer_scramble[buffer_x]
 	else:
 		print(f"Wrong move! {current_move}")
 
