@@ -7,7 +7,9 @@
 #	<>	Assign a buffer with the face on which the cross was made
 #	<>	Go to the faces surrounding it and decide whether or not the edges
 #		are aligned
-#	Note^2: timer function needs some work.
+
+#	Timing function needs some work as the timer starts before the first move is 
+#	made.
 
 from bleak import BleakClient, BleakScanner, BleakGATTCharacteristic
 import gancube
@@ -44,6 +46,7 @@ run_cfop_check = False
 current_move = ""
 buffer_x = 0
 finish_session = False
+timer_started = False
 
 #comms = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
 #comms.reset_input_buffer()
@@ -52,6 +55,8 @@ def scramble_cube():
 	global scramble
 	global buffer_scramble
 	global display_scramble
+	global timer_started
+	timer_started = False
 	buffer_scramble = visual.generate_random_moves(num_steps=30)
 	buffer_scramble = [str(m) for m in buffer_scramble]
 	display_scramble = buffer_scramble.copy()
@@ -82,7 +87,6 @@ def detect_scrambling(move):
 	print("Scrambled cube state:")
 	print(scrambled_cube)
 	print(scramble)
-	print(buffer_scramble)
 	scrambled_cube_kociemba_state = scrambled_cube.get_kociemba_facelet_colors()
 	visual_kociemba_state = visual.get_kociemba_facelet_colors()
 	if visual_kociemba_state == scrambled_cube_kociemba_state:
@@ -98,7 +102,6 @@ def detect_incorrect_scrambling(move):
 	global buffer_scramble
 	global current_move
 	global buffer_x
-	print(move)
 	if current_move == move:
 		buffer_x += 1
 		current_move = buffer_scramble[buffer_x]
@@ -128,7 +131,12 @@ def serial_communication_protocol():
 			comms.write(b"Cross\n")
 
 def record_move_history(move):
+	global timer_started
 	if cube_scrambled:
+		if not timer_started:
+			global start_time
+			start_time = time.perf_counter()
+			timer_started = True
 		if not cross_solved:
 			cross_moves.append(move)
 		else:
