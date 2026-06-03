@@ -8,17 +8,18 @@
 #	<>	Go to the faces surrounding it and decide whether or not the edges
 #		are aligned
 
-#	Timing function needs some work as the timer starts before the first move is 
-#	made.
-
 from bleak import BleakClient, BleakScanner, BleakGATTCharacteristic
 import gancube
 import asyncio
 import magiccube
 import serial
 import time
+import algorithms
 
-full_moves = []
+full_moves = [
+	[],
+	[]
+]
 cross_moves = []
 f2l_moves = []
 OLL_moves = []
@@ -220,23 +221,23 @@ def CFOP():
 				if cube_solved:
 					run_cfop_check = False
 					global end_time
-					end_time = time.perf_counter()
-					print("Time:", str(end_time - start_time))
-					print(f"Cross: ", " ".join(str(x) for x in cross_moves))
-					print(f"F2L: ", " ".join(str(x) for x in f2l_moves))
-					print(f"OLL: ", " ".join(str(x) for x in OLL_moves))
-					print(f"PLL: ", " ".join(str(x) for x in PLL_moves))
 					analyse_cube_solve()
 
 def analyse_cube_solve():
 	analysis = []
+	end_time = time.perf_counter()
+	print("Time:", str(end_time - start_time))
+	print(f"Cross: ", " ".join(str(x) for x in cross_moves))
+	print(f"F2L: ", " ".join(str(x) for x in f2l_moves))
+	print(f"OLL: ", " ".join(str(x) for x in OLL_moves))
+	print(f"PLL: ", " ".join(str(x) for x in PLL_moves))
 #	Analyse cross solve to see if it is under 8 moves
 	if len(cross_moves) <= 8:
-		analysis.append(f"Well done! That cross solve was done in {len(cross_moves)}")
+		analysis.append(f"Well done! That cross solve was done in {len(cross_moves)} moves!")
 	else:
 		analysis.append("Cross solution is in more than 8 moves.")
 #	Calculate average TPS (turns per second)
-	tps = len(full_moves) / (end_time - start_time)
+	tps = len(full_moves[0]) / (end_time - start_time)
 	analysis.append(f"Average TPS: {tps}")
 	for x in analysis:
 		print(x)
@@ -244,6 +245,8 @@ def analyse_cube_solve():
 
 async def main():
 	print("\033c", end="")
+#	This finds the nearest Gan I3 smart cube and connects to them using BLE; 
+#	This doesn't search for other smart cubes
 	print("Searching for smart cubes to connect with...")
 	devices = await BleakScanner.discover()
 	for d in devices:
@@ -259,13 +262,11 @@ async def main():
 			if service.uuid == cube.SERVICE_UUID:
 				cube_service = service
 				break
-
 		read_chrct = None
 		for chrct in cube_service.characteristics:
 			if chrct.uuid == cube.CHRCT_UUID_READ:
 				read_chrct = chrct
 				print(f"Read characteristic: {read_chrct}")
-
 		async def handler(sender: BleakGATTCharacteristic, data: bytearray):
 			global cube, full_moves
 			data = [int(i) for i in data]
@@ -319,18 +320,21 @@ async def main():
 							break
 				else:
 					new_move = curr_window[-1] if curr_window else None
+#				When a move is registered from the smart cube, this snippet of code handles all the logic.
+#				Not ideal, but I made it work. Any cleanup is appreciated
 				if new_move:
 					global moves_recieved
 					moves_recieved += 1
 					if moves_recieved > 2:
 						global run_cfop_check
 						record_move_history(new_move)
-						full_moves.append(new_move)
 						visual.rotate(new_move)
 						print("\033c", end="")
 						print(visual)
 						if cube_scrambled:
 							run_cfop_check = True
+							full_moves[0].append(new_move)
+							full_moves[1].append(time.perf_counter() - start_time)
 						else:
 							detect_scrambling(new_move)
 					else:
@@ -349,6 +353,7 @@ async def run_task():
 	while True:
 		if run_cfop_check and cube_scrambled:
 			CFOP()
+#			Note: uncomment this line when Raspberry Pi intergration is done
 #			serial_communication_protocol()
 		await asyncio.sleep(0.25)  # run 4 times per second
 		if finish_session:
