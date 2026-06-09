@@ -48,6 +48,13 @@ current_move = ""
 buffer_x = 0
 finish_session = False
 timer_started = False
+cube_calibrated = False
+text_art = r"""    ______               
+   / ____/________  ____ 
+  / __/ / ___/ __ \/ __ \
+ / /___/ /  / / / / /_/ /
+/_____/_/  /_/ /_/\____/ 
+                         """
 
 #comms = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
 #comms.reset_input_buffer()
@@ -269,6 +276,7 @@ async def main():
 			if chrct.uuid == cube.CHRCT_UUID_READ:
 				read_chrct = chrct
 				print(f"Read characteristic: {read_chrct}")
+				print("\033c", end="")
 		async def handler(sender: BleakGATTCharacteristic, data: bytearray):
 			global cube, full_moves
 			data = [int(i) for i in data]
@@ -325,10 +333,13 @@ async def main():
 #				When a move is registered from the smart cube, this snippet of code handles all the logic.
 #				Not ideal, but I made it work. Any cleanup is appreciated
 				if new_move:
+					global cube_calibrated
+					cube_calibrated = False
 					global moves_recieved
 					moves_recieved += 1
 					if moves_recieved > 2:
 						global run_cfop_check
+						cube_calibrated = True
 						record_move_history(new_move)
 						visual.rotate(new_move)
 						print("\033c", end="")
@@ -346,17 +357,22 @@ async def main():
 				last_window = curr_window
 		if read_chrct:
 			await client.start_notify(read_chrct, handler)
-			print("Started notifications...")
+			print(text_art)
 			prompt = input("> ")
 			while True:
 				if prompt.lower() == "start":
+					if not cube_calibrated:
+						print("Do a move and do it's inverse to calibrate the cube first.")
 					scramble_cube()
 					break
-				if prompt.lower() == "help":
+				elif prompt.lower() == "help":
 					print("Available commands:")
 					print("start - Start a new session and scramble the cube")
 					print("help - Show this help message")
 					prompt = input("> ")
+				elif prompt.lower() == "clear":
+					print("\033c", end="")
+					prompt = input("> ")	
 				else:
 					print("Unknown command. Type 'help' for a list of commands.")
 					prompt = input("> ")
