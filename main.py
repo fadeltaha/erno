@@ -159,6 +159,7 @@ def CFOP():
 	global f2l_pair_WBO
 	global f2l_pair_WBR
 	global f2l_pair_WGR
+	global OLL_state
 	cube_solved = visual.is_done()
 #	Currently only checks the White face
 #	First adds the entire Kociemba notation to the Kociemba notation list
@@ -208,6 +209,7 @@ def CFOP():
 								f2l_moves.append("[f2l_pair_WGO solved]")
 		if f2l_pair_WGR == True and f2l_pair_WBO == True and f2l_pair_WBR == True and f2l_pair_WGO == True:
 			f2l_solved = True
+			OLL_state = visual.get_kociemba_facelet_colors()
 			solved_pieces = 0
 			buffer = visual.get_kociemba_facelet_colors()
 			kociemba_notation = list(buffer)
@@ -331,6 +333,7 @@ async def main():
 						visual.rotate(new_move)
 						print("\033c", end="")
 						print(visual)
+						print(visual.get_kociemba_facelet_colors())
 						if cube_scrambled:
 							run_cfop_check = True
 							full_moves[0].append(new_move)
@@ -344,7 +347,19 @@ async def main():
 		if read_chrct:
 			await client.start_notify(read_chrct, handler)
 			print("Started notifications...")
-			scramble_cube()
+			prompt = input("> ")
+			while True:
+				if prompt.lower() == "start":
+					scramble_cube()
+					break
+				if prompt.lower() == "help":
+					print("Available commands:")
+					print("start - Start a new session and scramble the cube")
+					print("help - Show this help message")
+					prompt = input("> ")
+				else:
+					print("Unknown command. Type 'help' for a list of commands.")
+					prompt = input("> ")
 			asyncio.create_task(run_task())
 			while True:
 				await asyncio.sleep(1)

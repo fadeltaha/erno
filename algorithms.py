@@ -1,10 +1,10 @@
+#   Here, use the Kociemba notation on the side where PLL is being solved and compare it with this dictionary
 PLL_algorithms = {
 
 }
-
+#   Here, use the Kociemba notation on the side where OLL is being solved and compare it with this dictionary
 OLL_algorithms = {
-    "R U U R R F R F' U U R' F R F'" : "1"
-    
+
 }
 
 def recognize_OLL_algorithm(algorithm):
