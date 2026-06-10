@@ -358,6 +358,8 @@ async def main():
 		if read_chrct:
 			await client.start_notify(read_chrct, handler)
 			print(text_art)
+			print("<Erno - Version 0.01>")
+			print("Type 'help' for a list of commands.")
 			prompt = input("> ")
 			while True:
 				if prompt.lower() == "start":
