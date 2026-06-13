@@ -56,8 +56,8 @@ text_art = r"""    ______
 /_____/_/  /_/ /_/\____/ 
                          """
 
-#comms = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
-#comms.reset_input_buffer()
+comms = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
+comms.reset_input_buffer()
 
 def scramble_cube():
 	global scramble
@@ -126,17 +126,12 @@ def detect_incorrect_scrambling(move):
 		print(f"Wrong move! {current_move}")
 
 def serial_communication_protocol():
-	if cross_solved:
-		if f2l_solved:
-			if OLL_solved:
-				if cube_solved:
-					comms.write(b"Cross, F2L, OLL, PLL\n")	
-				else:
-					comms.write(b"Cross, F2L, OLL\n")
-			else:
-				comms.write(b"Cross, F2L\n")
-		else:
-			comms.write(b"Cross\n")
+	if cube_solved:
+		for x in range(len(full_moves[0])):
+			buffer_serial = full_moves[0][x]
+			comms.write(buffer_serial.encode())
+			buffer_serial = full_moves[1][x]
+			comms.write(buffer_serial.encode())
 
 def record_move_history(move):
 	global timer_started
@@ -230,7 +225,9 @@ def CFOP():
 				if cube_solved:
 					run_cfop_check = False
 					global end_time
+					global finish_session
 					analyse_cube_solve()
+					finish_session = True
 
 def analyse_cube_solve():
 	analysis = []
@@ -265,7 +262,7 @@ async def main():
 			cube = gancube.GanCube(d.address)
 			cube.name = d.name
 			cube.address = d.address
-	async with BleakClient(cube.address) as client:
+	async with BleakClient(cube.address, timeout=30.0) as client:
 		cube_service = None
 		for service in client.services:
 			if service.uuid == cube.SERVICE_UUID:
@@ -378,16 +375,19 @@ async def main():
 				else:
 					print("Unknown command. Type 'help' for a list of commands.")
 					prompt = input("> ")
-			asyncio.create_task(run_task())
-			while True:
-				await asyncio.sleep(1)
+			background_task = asyncio.create_task(run_task())
+			while not finish_session:
+				await asyncio.sleep(0.5)
+			await client.stop_notify(read_chrct)
+			background_task.cancel()
+	
 async def run_task():
-	global run_cfop_check
-	while True:
+	global run_cfop_check, finish_session
+	while not finish_session:
 		if run_cfop_check and cube_scrambled:
 			CFOP()
 #			Note: uncomment this line when Raspberry Pi intergration is done
-#			serial_communication_protocol()
+			serial_communication_protocol()
 		await asyncio.sleep(0.25)  # run 4 times per second
 		if finish_session:
 			break
