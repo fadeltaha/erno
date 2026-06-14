@@ -130,8 +130,6 @@ def serial_communication_protocol():
 		for x in range(len(full_moves[0])):
 			buffer_serial = full_moves[0][x]
 			comms.write(buffer_serial.encode())
-			buffer_serial = full_moves[1][x]
-			comms.write(buffer_serial.encode())
 
 def record_move_history(move):
 	global timer_started
