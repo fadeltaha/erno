@@ -8,6 +8,8 @@
 #	<>	Go to the faces surrounding it and decide whether or not the edges
 #		are aligned
 
+from turtle import delay
+
 from bleak import BleakClient, BleakScanner, BleakGATTCharacteristic
 import gancube
 import asyncio
@@ -129,7 +131,9 @@ def serial_communication_protocol():
 	if cube_solved:
 		for x in range(len(full_moves[0])):
 			buffer_serial = full_moves[0][x]
+			buffer_serial = f"{buffer_serial}\n"
 			comms.write(buffer_serial.encode())
+			delay(0.2)
 
 def record_move_history(move):
 	global timer_started
@@ -225,6 +229,7 @@ def CFOP():
 					global end_time
 					global finish_session
 					analyse_cube_solve()
+					serial_communication_protocol()
 					finish_session = True
 
 def analyse_cube_solve():
@@ -384,8 +389,6 @@ async def run_task():
 	while not finish_session:
 		if run_cfop_check and cube_scrambled:
 			CFOP()
-#			Note: uncomment this line when Raspberry Pi intergration is done
-			serial_communication_protocol()
 		await asyncio.sleep(0.25)  # run 4 times per second
 		if finish_session:
 			break
