@@ -58,7 +58,7 @@ text_art = r"""    ______
 /_____/_/  /_/ /_/\____/ 
                          """
 
-comms = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
+comms = serial.Serial('COM5', 9600, timeout=1)
 comms.reset_input_buffer()
 
 def scramble_cube():
@@ -132,8 +132,10 @@ def serial_communication_protocol():
 		for x in range(len(full_moves[0])):
 			buffer_serial = full_moves[0][x]
 			buffer_serial = f"{buffer_serial}\n"
-			comms.write(buffer_serial.encode())
-			delay(0.2)
+			comms.write(buffer_serial.encode("utf-8"))
+			time.sleep(1.4)
+		comms.close()
+			
 
 def record_move_history(move):
 	global timer_started
