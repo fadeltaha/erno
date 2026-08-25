@@ -33,56 +33,56 @@ void loop() {
     data.trim();
     if (data == "R" || data == "R'") {
       digitalWrite(2, HIGH);
-      delay(1000);
+      delay(100);
       digitalWrite(2, LOW);
-      delay(200);
+      delay(100);
       digitalWrite(2, HIGH);
-      delay(200);
+      delay(100);
       digitalWrite(2, LOW);
     }
     if (data == "L" || data == "L'") {
       digitalWrite(3, HIGH);
-      delay(1000);
+      delay(100);
       digitalWrite(3, LOW); 
-      delay(200);
+      delay(100);
       digitalWrite(3, HIGH);
-      delay(200);
+      delay(100);
       digitalWrite(3, LOW);
     }
     if (data == "U" || data == "U'") {
       digitalWrite(4, HIGH);
-      delay(1000);
+      delay(100);
       digitalWrite(4, LOW);
-      delay(200);
+      delay(100);
       digitalWrite(4, HIGH);
-      delay(200);
+      delay(100);
       digitalWrite(4, LOW);
     }
     if (data == "D" || data == "D'") {
       digitalWrite(5, HIGH);
-      delay(1000);
+      delay(100);
       digitalWrite(5, LOW);
-      delay(200);
+      delay(100);
       digitalWrite(5, HIGH);
-      delay(200);
+      delay(100);
       digitalWrite(5, LOW);
     }
     if (data == "F" || data == "F'") {
       digitalWrite(6, HIGH);
-      delay(1000);
+      delay(100);
       digitalWrite(6, LOW);
-      delay(200);
+      delay(100);
       digitalWrite(6, HIGH);
-      delay(200);
+      delay(100);
       digitalWrite(6, LOW);
     }
     if (data == "B" || data == "B'") {
       digitalWrite(7, HIGH);
-      delay(1000);
+      delay(100);
       digitalWrite(7, LOW);
-      delay(200);
+      delay(100);
       digitalWrite(7, HIGH);
-      delay(200);
+      delay(100);
       digitalWrite(7, LOW);
     }
   }

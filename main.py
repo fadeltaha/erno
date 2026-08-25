@@ -133,7 +133,7 @@ def serial_communication_protocol():
 			buffer_serial = full_moves[0][x]
 			buffer_serial = f"{buffer_serial}\n"
 			comms.write(buffer_serial.encode("utf-8"))
-			time.sleep(1.4)
+			time.sleep(0.3)
 		comms.close()
 			
 
@@ -353,9 +353,6 @@ async def main():
 							full_moves[1].append(time.perf_counter() - start_time)
 						else:
 							detect_scrambling(new_move)
-					else:
-						print("Initializing cube..")
-						print("Please do another turn")
 				last_window = curr_window
 		if read_chrct:
 			await client.start_notify(read_chrct, handler)
