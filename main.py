@@ -130,10 +130,15 @@ def detect_incorrect_scrambling(move):
 def serial_communication_protocol():
 	if cube_solved:
 		for x in range(len(full_moves[0])):
-			buffer_serial = full_moves[0][x]
-			buffer_serial = f"{buffer_serial}\n"
+			move_serial = full_moves[0][x]
+			if x == 0:
+				gap = full_moves[1][x]
+			else:
+				gap = full_moves[1][x]-full_moves[1][x-1]
+			gap_ms = max(int((gap * 1000) / 3), 20)
+			buffer_serial = f"{move_serial} {gap_ms}\n"
 			comms.write(buffer_serial.encode("utf-8"))
-			time.sleep(0.3)
+			time.sleep(gap)
 		comms.close()
 			
 

@@ -31,60 +31,66 @@ void loop() {
   if (Serial.available() > 0) {
     String data = Serial.readStringUntil('\n');
     data.trim();
-    if (data == "R" || data == "R'") {
+
+    int spaceIdx = data.indexOf(' ');
+    if (spaceIdx <= 0) return;  // malformed line, no space found — bail out
+
+    String move = data.substring(0, spaceIdx);
+    long moveTime = data.substring(spaceIdx + 1).toInt();
+
+    if (move == "R" || move == "R'") {
       digitalWrite(2, HIGH);
-      delay(100);
+      delay(moveTime);
       digitalWrite(2, LOW);
-      delay(100);
+      delay(moveTime);
       digitalWrite(2, HIGH);
-      delay(100);
+      delay(moveTime);
       digitalWrite(2, LOW);
     }
-    if (data == "L" || data == "L'") {
+    if (move == "L" || move == "L'") {
       digitalWrite(3, HIGH);
-      delay(100);
+      delay(moveTime);
       digitalWrite(3, LOW); 
-      delay(100);
+      delay(moveTime);
       digitalWrite(3, HIGH);
-      delay(100);
+      delay(moveTime);
       digitalWrite(3, LOW);
     }
-    if (data == "U" || data == "U'") {
+    if (move == "U" || move == "U'") {
       digitalWrite(4, HIGH);
-      delay(100);
+      delay(moveTime);
       digitalWrite(4, LOW);
-      delay(100);
+      delay(moveTime);
       digitalWrite(4, HIGH);
-      delay(100);
+      delay(moveTime);
       digitalWrite(4, LOW);
     }
-    if (data == "D" || data == "D'") {
+    if (move == "D" || move == "D'") {
       digitalWrite(5, HIGH);
-      delay(100);
+      delay(moveTime);
       digitalWrite(5, LOW);
-      delay(100);
+      delay(moveTime);
       digitalWrite(5, HIGH);
-      delay(100);
+      delay(moveTime);
       digitalWrite(5, LOW);
     }
-    if (data == "F" || data == "F'") {
+    if (move == "F" || move == "F'") {
       digitalWrite(6, HIGH);
-      delay(100);
+      delay(moveTime);
       digitalWrite(6, LOW);
-      delay(100);
+      delay(moveTime);
       digitalWrite(6, HIGH);
-      delay(100);
+      delay(moveTime);
       digitalWrite(6, LOW);
     }
-    if (data == "B" || data == "B'") {
+    if (move == "B" || move == "B'") {
       digitalWrite(7, HIGH);
-      delay(100);
+      delay(moveTime);
       digitalWrite(7, LOW);
-      delay(100);
+      delay(moveTime);
       digitalWrite(7, HIGH);
-      delay(100);
+      delay(moveTime);
       digitalWrite(7, LOW);
     }
   }
 }
-
