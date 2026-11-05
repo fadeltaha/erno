@@ -1,2 +1,2 @@
 # erno
-A speedcubing timer that works on your Linux terminal
+A Cube Solver That Actually Helps You Solve Faster!
