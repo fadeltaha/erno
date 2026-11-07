@@ -8,8 +8,6 @@
 #	<>	Go to the faces surrounding it and decide whether or not the edges
 #		are aligned
 
-from turtle import delay
-
 from bleak import BleakClient, BleakScanner, BleakGATTCharacteristic
 import gancube
 import asyncio
@@ -17,8 +15,12 @@ import magiccube
 import serial
 import time
 import algorithms
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
 
 full_moves = [
+	[],
 	[],
 	[]
 ]
@@ -51,15 +53,78 @@ buffer_x = 0
 finish_session = False
 timer_started = False
 cube_calibrated = False
-text_art = r"""    ______               
-   / ____/________  ____ 
-  / __/ / ___/ __ \/ __ \
- / /___/ /  / / / / /_/ /
-/_____/_/  /_/ /_/\____/ 
+text_art = r"""    _______               
+   / _____/________  ____ 
+  / ____/ / ___/ __ \/ __ \
+ / /____/ /  / / / / /_/ /
+/______/_/  /_/ /_/\____/ 
                          """
 
-comms = serial.Serial('COM5', 9600, timeout=1)
-comms.reset_input_buffer()
+#comms = serial.Serial('COM5', 9600, timeout=1)
+#comms.reset_input_buffer()
+
+def calculate_tps(window=5):
+    gaps = full_moves[2]
+    if len(gaps) < window:
+        return [], []
+    move_numbers = []
+    tps_values = []
+    for i in range(window - 1, len(gaps)):
+        total_time = sum(gaps[i-window+1:i+1])
+        if total_time > 0:
+            tps = window / total_time
+            move_numbers.append(i + 1)
+            tps_values.append(tps)
+    return move_numbers, tps_values
+
+def plot_tps_graph(average_tps):
+    move_numbers, tps_values = calculate_tps(window=5)
+    if not tps_values:
+        print("Not enough moves to generate TPS graph.")
+        return
+    plt.figure(figsize=(12, 5))
+    plt.plot(
+        move_numbers,
+        tps_values,
+        marker='o',
+        markersize=3,
+        linewidth=1.5,
+        label="Rolling TPS"
+    )
+    plt.axhline(
+        y=average_tps,
+        linestyle='--',
+        label=f"Average TPS: {average_tps:.2f}"
+    )
+    plt.xlabel("Move Number")
+    plt.ylabel("Turns Per Second")
+    plt.title("TPS Progression Throughout Solve")
+    plt.grid(True, alpha=0.3)
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig("tps.png", dpi=150)
+    plt.show()
+
+def calculate_gap_graph():
+	times = full_moves[1]
+	if not times:
+		return
+	full_moves[2] = [times[0]] + [times[i] - times[i-1] for i in range(1, len(times))]
+
+def plot_graphs():
+	gaps = full_moves[2]
+	moves = full_moves[0]
+	if not gaps:
+		return
+	plt.figure(figsize=(12,5))
+	plt.bar(range(len(gaps)), gaps)
+	plt.xticks(range(len(moves)), moves, rotation=90)
+	plt.xlabel('Moves')
+	plt.ylabel('Time Gap (seconds)')
+	plt.title('Time Gap Between Moves')
+	plt.tight_layout()
+	plt.savefig("gaps.png", dpi=150)
+	plt.show()
 
 def scramble_cube():
 	global scramble
@@ -133,8 +198,10 @@ def serial_communication_protocol():
 			move_serial = full_moves[0][x]
 			if x == 0:
 				gap = full_moves[1][x]
+				full_moves[2][x] = gap
 			else:
 				gap = full_moves[1][x]-full_moves[1][x-1]
+				full_moves[2][x] = gap
 			gap_ms = max(int((gap * 1000) / 3), 20)
 			buffer_serial = f"{move_serial} {gap_ms}\n"
 			comms.write(buffer_serial.encode("utf-8"))
@@ -236,7 +303,7 @@ def CFOP():
 					global end_time
 					global finish_session
 					analyse_cube_solve()
-					serial_communication_protocol()
+#					serial_communication_protocol()
 					finish_session = True
 
 def analyse_cube_solve():
@@ -247,16 +314,18 @@ def analyse_cube_solve():
 	print(f"F2L: ", " ".join(str(x) for x in f2l_moves))
 	print(f"OLL: ", " ".join(str(x) for x in OLL_moves))
 	print(f"PLL: ", " ".join(str(x) for x in PLL_moves))
+	tps = len(full_moves[0]) / (end_time - start_time)
+	plot_tps_graph(tps)
+	analysis.append(f"Average TPS: {tps}")
 #	Analyse cross solve to see if it is under 8 moves
 	if len(cross_moves) <= 8:
 		analysis.append(f"Well done! That cross solve was done in {len(cross_moves)} moves!")
 	else:
 		analysis.append("Cross solution is in more than 8 moves.")
 #	Calculate average TPS (turns per second)
-	tps = len(full_moves[0]) / (end_time - start_time)
-	analysis.append(f"Average TPS: {tps}")
 	for x in analysis:
 		print(x)
+	calculate_gap_graph()
 	analysis.clear()
 
 async def main():
@@ -356,6 +425,7 @@ async def main():
 							run_cfop_check = True
 							full_moves[0].append(new_move)
 							full_moves[1].append(time.perf_counter() - start_time)
+							
 						else:
 							detect_scrambling(new_move)
 				last_window = curr_window
@@ -397,3 +467,4 @@ async def run_task():
 		if finish_session:
 			break
 asyncio.run(main())
+plot_graphs()
