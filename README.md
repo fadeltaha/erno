@@ -1,2 +1,2 @@
 # erno
-A Cube Solver That Actually Helps You Solve Faster!
+A terminal-based cube timer that analyses your solves
