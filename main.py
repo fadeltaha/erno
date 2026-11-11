@@ -82,7 +82,7 @@ def plot_tps_graph(average_tps):
     if not tps_values:
         print("Not enough moves to generate TPS graph.")
         return
-    plt.figure(figsize=(12, 5))
+    plt.figure("TPS Progression", figsize=(12, 5))
     plt.plot(
         move_numbers,
         tps_values,
@@ -103,7 +103,6 @@ def plot_tps_graph(average_tps):
     plt.legend()
     plt.tight_layout()
     plt.savefig("tps.png", dpi=150)
-    plt.show()
 
 def calculate_gap_graph():
 	times = full_moves[1]
@@ -116,7 +115,7 @@ def plot_graphs():
 	moves = full_moves[0]
 	if not gaps:
 		return
-	plt.figure(figsize=(12,5))
+	plt.figure("Time Gaps", figsize=(12,5))
 	plt.bar(range(len(gaps)), gaps)
 	plt.xticks(range(len(moves)), moves, rotation=90)
 	plt.xlabel('Moves')
@@ -124,6 +123,10 @@ def plot_graphs():
 	plt.title('Time Gap Between Moves')
 	plt.tight_layout()
 	plt.savefig("gaps.png", dpi=150)
+
+def display_all_plots():
+	plot_tps_graph(sum(full_moves[2]) / len(full_moves[2]) if full_moves[2] else 0)
+	plot_graphs()
 	plt.show()
 
 def scramble_cube():
@@ -302,11 +305,28 @@ def CFOP():
 					run_cfop_check = False
 					global end_time
 					global finish_session
-					analyse_cube_solve()
+					answer = input("Cube solved! Do you want to analyse the solve? (y/n): ")
+					if answer.lower() == "y":
+						analyse_cube_solve()
 #					serial_communication_protocol()
 					finish_session = True
 
 def analyse_cube_solve():
+	print("\033c", end="")
+	visual.reset()
+	visual.rotate(scramble)
+	for x in range(len(full_moves[0])):
+			print("\033c", end="")
+			print(visual)
+			move_analysis = full_moves[0][x]
+			if x == 0:
+				gap = full_moves[1][x]
+				full_moves[2].append(gap)
+			else:
+				gap = full_moves[1][x]-full_moves[1][x-1]
+				full_moves[2].append(gap)
+			visual.rotate(move_analysis)
+			time.sleep(full_moves[2][x])
 	analysis = []
 	end_time = time.perf_counter()
 	print("Time:", str(end_time - start_time))
@@ -467,4 +487,4 @@ async def run_task():
 		if finish_session:
 			break
 asyncio.run(main())
-plot_graphs()
+display_all_plots()
