@@ -306,6 +306,7 @@ def CFOP():
 					global end_time
 					global finish_session
 					answer = input("Cube solved! Do you want to analyse the solve? (y/n): ")
+					end_time = time.perf_counter()
 					if answer.lower() == "y":
 						analyse_cube_solve()
 #					serial_communication_protocol()
@@ -328,7 +329,6 @@ def analyse_cube_solve():
 			visual.rotate(move_analysis)
 			time.sleep(full_moves[2][x])
 	analysis = []
-	end_time = time.perf_counter()
 	print("Time:", str(end_time - start_time))
 	print(f"Cross: ", " ".join(str(x) for x in cross_moves))
 	print(f"F2L: ", " ".join(str(x) for x in f2l_moves))
